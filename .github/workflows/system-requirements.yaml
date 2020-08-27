@@ -1,0 +1,71 @@
+name: GitHub Actions - System Requirements
+on:
+
+####----------------------------------------------------------------------------
+  workflow_dispatch:
+    name: Manual Deployment
+    description: 'Triggering Manual Deployment'
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: 'System Requirements'
+####----------------------------------------------------------------------------
+  push:
+    branches: [ master ]
+    paths:
+      - action.yaml
+####----------------------------------------------------------------------------
+## env:
+  ## AWS_ACCESS_KEY_ID
+  ## AWS_DEFAULT_ACCOUNT
+  ## AWS_DEFAULT_PROFILE
+  ## AWS_DEFAULT_REGION
+  ## AWS_SECRET_ACCESS_KEY
+  ## DEPLOY_TERRAFORM
+  ## DESTROY_TERRAFORM
+  ## DEVOPS_ASSUMEROLE_POLICY
+  ## DEVOPS_BOUNDARIES_POLICY
+  ## DEVOPS_ACCESS_POLICY
+  ## DEVOPS_ACCESS_ROLE
+  ## DEVOPS_ACCOUNT_NAME
+  ## INSPECT_DEPLOYMENT
+  ## PRIVATE_KEYPAIR_FILE
+  ## PRIVATE_KEYPAIR_NAME
+  ## PRIVATE_KEYPAIR_SECRET
+  ## PROVISION_TERRAFORM
+  ## TARGET_WORKSPACE
+  ## UPDATE_PYTHON_LATEST
+  ## UPDATE_SYSTEM_LATEST
+####----------------------------------------------------------------------------
+jobs:
+  system-requirements:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+####----------------------------------------------------------------------------
+      ## System Requirements
+      - name: System Requirements
+        uses: ./
+        id: system-requirements
+        with:
+          install-awscli-tool: true
+          install-custom-tools: netcat
+          install-default-tools: true
+          install-terraform-cli: latest
+          update-operating-system: true
+          update-python-version: true
+        continue-on-error: false
+####----------------------------------------------------------------------------
+      ## Installed Packages
+      - name: Installed Packages
+        id: installed-packages
+        shell: bash
+        run: |
+          jq --version 2>/dev/null ;
+          aws --version ;
+          terraform --version 2>/dev/null ;
+####----------------------------------------------------------------------------
