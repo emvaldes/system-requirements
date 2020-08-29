@@ -1,159 +1,138 @@
-name: 'AWS STS Generate Credentials'
-description: 'AWS STS Generate Credentials'
+name: 'System Requirements'
+description: 'System Requirements (DevOps)'
 ####----------------------------------------------------------------------------
 inputs:
-  aws-access-key-id:
-    description: 'AWS Access Key-ID'
-    required: true
-    default: ''
-  aws-secret-access-key:
-    description: 'AWS Secret Access Key'
-    required: true
-    default: ''
-  aws-shared-credentials-file:
-    description: 'AWS Shared Credentials File'
+  update-operating-system:
+    description: 'Updating the Operating System State'
     required: false
-    default: '.aws/credentials'
-  aws-default-profile:
-    description: 'AWS Default Profile'
+    default: false
+  update-python-version:
+    description: 'Updating the current Python Version'
     required: false
-    default: 'default'
-  aws-default-region:
-    description: 'AWS Default Region'
+    default: false
+  install-default-tools:
+    description: 'Installing Default Toolset (DevOps)'
     required: false
-    default: 'us-east-1'
-  aws-default-account:
-    description: 'AWS Default Account Number'
-    required: true
-    default: ''
-  session-timestamp:
-    description: 'Session Time-Stamp'
+    default: false
+  install-custom-tools:
+    description: 'Installing Custom Toolset (DevOps)'
     required: false
     default: ''
-  devops-access-role:
-    description: 'DevOps Access Role'
-    required: true
-    default: 'DevOps--Custom-Access.Role'
-  devops-account-id:
-    description: 'DevOps Account ID'
+  install-awscli-tool:
+    description: 'Installing AWS CLI Tool (latest)'
     required: false
-    default: ''
-  devops-account-name:
-    description: 'DevOps Account Name'
-    required: true
-    default: ''
+    default: false
+  install-terraform-cli:
+    description: 'Installing HashiCorp Terraform (latest)'
+    required: false
+    default: false
 ####----------------------------------------------------------------------------
-outputs:
-  credentials-file:
-    description: "Exporting AWS Credentials file-path"
-    value: ${{ steps.assume_credentials.outputs.credentials-file }}
+# outputs:
 ####----------------------------------------------------------------------------
 runs:
   using: "composite"
-  steps: 
+  steps:
     ####----------------------------------------------------------------------------
-    ## AWS STS Assume Role
-    - name: AWS STS Assume Role
-      id: assume_credentials
+    ## System Requirements
+    - name: System Requirements
+      id: system-requirements
       shell: bash
       run: |
         ####----------------------------------------------------------------------------
-        accountid="${{ inputs.devops-account-id }}" ;
-        if [[ ${#accountid} -gt 0 ]]; then
-          echo '::add-mask::${{ inputs.devops-account-id }}' ;
+        ## Update|Upgrade Operating System (latest):
+        if [[ ${{ inputs.update-operating-system }} == true ]]; then
+          echo -e "\nUpdating/Upgrading Operating System ..." ;
+          sudo apt-get update -y 2>&1>/dev/null;
+          sudo apt-get install -y lsb-release ;
+          echo -e;
+          lsb_release -a ;
+          ## else  echo -e "Skip: Updating Operating System (latest)! ";
         fi;
         ####----------------------------------------------------------------------------
-        credentials="${{ inputs.aws-shared-credentials-file }}";
-        if [[ ${#credentials} -gt 0 ]]; then
-                export credentials="${{ github.workspace }}/${{ inputs.aws-shared-credentials-file }}" ;
-          else  export credentials="${{ github.workspace }}/.aws/credentials";
+        ## Update|Upgrade Python (latest):
+        if [[ ${{ inputs.update-python-version }} == true ]]; then
+          echo -en "\nRe-Linking Python (latest: 3.6) ..." ;
+          ## python --version; ## Python 2.7
+          cd /usr/bin ;
+          sudo ln -fs python3.6 python ; echo -e;
+          python --version ;
+          ## else  echo -e "Skip: Upgrading Python (latest)! ";
         fi;
-        export AWS_SHARED_CREDENTIALS_FILE="${credentials}"; unset credentials;
-        mkdir -p ${AWS_SHARED_CREDENTIALS_FILE%\/*} ;
-        declare -a credsfile=() ;
-        credsfile+=("[default]") ;
-        credsfile+=("aws_access_key_id = ") ;
-        credsfile+=("aws_secret_access_key = ") ;
-        credsfile+=("aws_session_token = ") ;
-        credsfile+=("x_principal_arn = ") ;
-        credsfile+=("x_security_token_expires = ") ;
-        cat /dev/null > ${AWS_SHARED_CREDENTIALS_FILE} ;
-        oIFS="${IFS}"; IFS=$'\n' ;
-        for xline in ${credsfile[@]}; do
-          echo -e "${xline}" >> ${AWS_SHARED_CREDENTIALS_FILE} ;
-        done; IFS="${oIFS}" ;
-        ## cat ${AWS_SHARED_CREDENTIALS_FILE} ;
         ####----------------------------------------------------------------------------
-        timestamp="${{ inputs.session-timestamp }}";
-        if [[ ${#timestamp} -gt 0 ]]; then
-                session_timestamp="${{ inputs.session-timestamp }}" ;
-          else  session_timestamp="SessionTimestamp--$(date +"%Y%m%d%H%M%S")" ;
-        fi; unset timestamp;
-        declare -a credentials=(
-            aws_access_key_id~${{ inputs.aws-access-key-id }}
-            aws_secret_access_key~${{ inputs.aws-secret-access-key }}
-          ) ;
-        echo -e "\nInjecting Default User-Credentials into AWS-Credentials file: ${AWS_SHARED_CREDENTIALS_FILE}\n" ;
-        for credential in ${credentials[@]}; do
-          sed -i -e "s|^\(${credential%\~*}\)\( =\)\(.*\)$|\1\2 ${credential#*\~}|g" ${AWS_SHARED_CREDENTIALS_FILE} ;
-        done ;
-        echo -e "Initiating STS Assume Role request ..." ;
-        echo aws --profile ${{ inputs.aws-default-profile }} \
-                  --region ${{ inputs.aws-default-region }} \
-                  sts assume-role \
-                  --role-arn arn:aws:iam::${{ inputs.aws-default-account }}:role/${{ inputs.devops-access-role }} \
-                  --role-session-name ${session_timestamp} ;
-        declare -a session_token=($(
-            aws --profile ${{ inputs.aws-default-profile }} \
-                --region ${{ inputs.aws-default-region }} \
-                sts assume-role \
-                --role-arn arn:aws:iam::${{ inputs.aws-default-account }}:role/${{ inputs.devops-access-role }} \
-                --role-session-name "${session_timestamp}" \
-                --query 'Credentials.{aki:AccessKeyId,sak:SecretAccessKey,stk:SessionToken,sts:Expiration}' \
-                --output text
-          )) ;
-        echo -e "\nFetched STS Assumed Role Values:" ;
-        declare -a session_items=(
-            AWS_ACCESS_KEY_ID
-            AWS_SECRET_ACCESS_KEY
-            AWS_SESSION_TOKEN
-            AWS_TOKEN_EXPIRES
-          ) ;
-        echo -e "\nConstructed Session Items [array]:\n${session_items[@]}\n" ;
-        counter=0; for xkey in "${session_token[@]}"; do
-          eval "export ${session_items[$((counter++))]}=${xkey}" ;
-        done ;
+        ## Installing Default Toolset:
+        if [[ ${{ inputs.install-default-tools }} == true ]]; then
+          declare -a default_toolset=(
+              jq tree
+            );
+          echo -e "\nInstalling Default Tools ..." ;
+          for xtool in ${default_toolset[@]}; do echo -e "Package: ${xtool} ..."; done;
+          ## else  echo -e "Skip: Installing Default Toolset! ";
+        fi;
         ####----------------------------------------------------------------------------
-        echo -e "Obtaining Caller Identity (Default-Role):" ;
-        aws --profile ${{ inputs.aws-default-profile }} \
-            --region ${{ inputs.aws-default-region }} \
-            sts get-caller-identity ;
+        ## Installing Custom Toolset:
+        evaluate="${{ inputs.install-custom-tools }}";
+        if [[ ${#evaluate} -gt 0 ]]; then
+          echo -e "\nInstalling Custom Tools ..." ;
+          for xtool in ${{ inputs.install-custom-tools }}; do
+            echo -e "Package: ${xtool} ...";
+          done;
+          default_toolset+=(${{ inputs.install-custom-tools }});
+          ## else  echo -e "Skip: Intalling Custom Toolset! ";
+        fi;
         ####----------------------------------------------------------------------------
-        ## Exporting AWS Shared-Credentials file:
-        declare -a credentials=(
-            aws_access_key_id~${AWS_ACCESS_KEY_ID}
-            aws_secret_access_key~${AWS_SECRET_ACCESS_KEY}
-            aws_session_token~${AWS_SESSION_TOKEN}
-            x_principal_arn~arn:aws:iam::${{ inputs.aws-default-account }}:user/${{ inputs.devops-account-name }}
-            x_security_token_expires~${AWS_TOKEN_EXPIRES}
-          ) ;
-        echo -e;
-        for credential in ${credentials[@]}; do
-          echo -e "Injecting Credential: -> ${credential%\~*} = ${credential#*\~}" ;
-          sed -i -e "s|^\(${credential%\~*}\)\( =\)\(.*\)$|\1\2 ${credential#*\~}|g" ${AWS_SHARED_CREDENTIALS_FILE} ;
-        done ;
+        ## Combining Toolsets:
+        if [[ ${#default_toolset} -gt 0 ]]; then
+          sudo apt-get install -y ${default_toolset[*]} 2>&1>/dev/null ;
+        fi;
         ####----------------------------------------------------------------------------
-        echo -e "\nObtaining Caller Identity (Assumed-Role):" ;
-        aws --profile ${{ inputs.aws-default-profile }} \
-            --region ${{ inputs.aws-default-region }} \
-            sts get-caller-identity ;
+        ## Installing AWS CLI (latest):
+        aws --version >/dev/null 2>&1 && {
+            echo -e >&2 "\nAWS CLI is Installed ... Ok! ";
+            which aws ;
+            aws --version ;
+          } ;
+        if [[ ${{ inputs.install-awscli-tool }} == true ]]; then
+          ## Installing AWS CLI (latest):
+          if [[ ${{ inputs.install-awscli-tool }} == true ]]; then
+            awscli_download='awscli.amazonaws.com';
+            awscli_package='awscli-exe-linux-x86_64.zip';
+            echo -e "\nUpgrading AWS-CLI to version 2.0.40" ;
+            ## https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
+            cd /tmp ;
+            wget --quiet "https://${awscli_download}/${awscli_package}" \
+                 --directory-prefix=/tmp/ --output-document=awscliv2.zip ;
+            unzip awscliv2.zip 1>/dev/null ;
+            ls -l /usr/local/bin/aws ;
+            sudo ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update ;
+            aws --version ;
+          fi;
+          ## else  echo -e "Skip: Installing AWS CLI (latest)! ";
+        fi;
         ####----------------------------------------------------------------------------
-        echo "::set-output name=credentials-file::${AWS_SHARED_CREDENTIALS_FILE}" ;
-        ####----------------------------------------------------------------------------
-        echo "::set-env name=AWS_SHARED_CREDENTIALS_FILE::${AWS_SHARED_CREDENTIALS_FILE}" ;
-        echo "::set-env name=AWS_ACCESS_KEY_ID::${AWS_ACCESS_KEY_ID}" ;
-        echo "::set-env name=AWS_SECRET_ACCESS_KEY::${AWS_SECRET_ACCESS_KEY}" ;
-        echo "::set-env name=AWS_SESSION_TOKEN::${AWS_SESSION_TOKEN}" ;
+        ## Upgrading: https://www.terraform.io/upgrade-guides/0-13.html
+        ## Installing Terraform CLI (latest):
+        terraform --version >/dev/null 2>&1 && {
+            echo -e >&2 "\nHashiCorp Terraform is Installed ... Ok! " ;
+            which terraform ;
+            terraform --version ;
+          }
+        ## Installing HashiCorp Terraform (latest):
+        if [[ ${{ inputs.install-terraform-cli }} == true ]]; then
+          ## Terraform Package details:
+          terraform_download='releases.hashicorp.com/terraform';
+          terraform_platform='linux_amd64';
+          terraform_version='0.12.29';  ## Latest: 0.13.1
+          terraform_package="terraform_${terraform_version}_${terraform_platform}.zip";
+          terraform_source="${terraform_download}/${terraform_version}/${terraform_package}";
+          echo -e "\nTerraform Source: ${terraform_source}";
+          wget --quiet https://${terraform_source} -P /tmp/ ;
+          ls -al /tmp/${terraform_package} ;
+          unzip /tmp/${terraform_package} ;
+          chmod 0754 ./terraform ;
+          sudo mv ./terraform /usr/local/bin/ ;
+          ## TF_LOG=${terraform_loglevel} \
+          terraform --version ;
+          ## else  echo -e "Skip: Upgrading Operating System! ";
+        fi;
         ####----------------------------------------------------------------------------
         echo -e "\nCompleted! ";
-

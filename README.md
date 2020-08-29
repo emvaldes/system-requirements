@@ -1,106 +1,121 @@
-# AWS STS
-AWS STS - Role As A Service (RaaS)
+# System Requirements - DevOps Tools
+GitHub Actions - System Requirements (DevOps Tools)
 
-![GitHub Actions - AWS STS Assume Role](https://github.com/emvaldes/raas/workflows/GitHub%20Actions%20-%20AWS%20STS%20Assume%20Role/badge.svg)
+![GitHub Actions - System Requirements](https://github.com/emvaldes/operations-toolset/workflows/GitHub%20Actions%20-%20System%20Requirements/badge.svg)
 
-**<span style="color:red">1</span>** -) Create a Public|Private GitHub Repository for your project
-
-**<span style="color:red">2</span>** -) Inject your project into your GitHub Repository
-
-**<span style="color:red">3</span>** -) Create the GitHub Secrets to store sensitive|private data
+[Pipeline Deployment](https://github.com/emvaldes/configure-access/blob/master/.github/workflows/main.yaml)
 
 ```console
-AWS_ACCESS_KEYPAIR:     Terraform AWS KeyPair (PEM file).
-AWS_ACCESS_KEY_ID:      Terraform AWS Access Key-Id (e.g.: AKIA2...VT7DU).
-AWS_DEFAULT_ACCOUNT:    The AWS Account number (e.g.: 123456789012).
-AWS_DEFAULT_PROFILE:    The AWS Credentials Default User (e.g.: default).
-AWS_DEFAULT_REGION:     The AWS Default Region (e.g.: us-east-1)
-AWS_DEPLOY_TERRAFORM:   Enable|Disable (true|false) deploying terraform infrastructure
-AWS_DESTROY_TERRAFORM:  Enable|Disable (true|false) destroying terraform infrastructure
-AWS_SECRET_ACCESS_KEY:  Terraform AWS Secret Access Key (e.g.: zBqDUNyQ0G...IbVyamSCpe)
-DEVOPS_ACCESS_POLICY:   Defines the STS TrustPolicy for the Terraform user.
-DEVOPS_ACCESS_ROLE:     Defines the STS Assume-Role for the Terraform user.
-DEVOPS_ACCOUNT_NAME:    A placeholder for the Deployment Service Account's name (terraform).
-DEVOPS_ACCOUNT_ID:      It's intended to mask the AWS IAM User-ID when it gets listed.
-INSPECT_DEPLOYMENT:     Control-Process to enable auditing infrastructure state.
-UPDATE_PYTHON_LATEST:   Enforce the upgrade from the default 2.7 to symlink to the 3.6
-UPDATE_SYSTEM_LATEST:   Enforce the upgrade of the Operating System.
-```
-**<span style="color:red">4</span>** -) Create a GitHub Action - Pipeline to deploy your project: .github/workflows/main.yaml <br>
-**Note**: This is just a prototype of how to use this GitHub Action (uses: emvaldes/raas@v0.1)
-
-[Pipeline Deployment](https://github.com/emvaldes/raas/blob/master/.github/workflows/main.yaml)
-
-```console
-name: GitHub Actions - AWS STS Assume Role
-on: [push]
+name: GitHub Actions - System Requirements
+## on: [push]
+on:
 ####----------------------------------------------------------------------------
-env:
-  ...
+  workflow_dispatch:
+    name: 'Manual Deployment'
+    description: 'Triggering Manual Deployment'
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: 'System Requirements'
+####----------------------------------------------------------------------------
+  push:
+    branches: [ master ]
+    paths: 
+      - action.yaml
+####----------------------------------------------------------------------------
+# env:
 ####----------------------------------------------------------------------------
 jobs:
-  credentials:
+  system-requirements:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v2
-        ...
 ####----------------------------------------------------------------------------
-      - name: AWS STS Assume Role
+      ## Privision Access KeyPair
+      - name: System Requirements
         uses: ./
-        id: request_credentials
+        id: system-requirements
         with:
-          session-timestamp: 'DevOpsPipeline--20200827193000'
-          aws-default-account: ${{ env.AWS_DEFAULT_ACCOUNT }}
-          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws-default-profile: 'default'
-          aws-default-region: 'us-east-1'
-          devops-access-role: ${{ env.DEVOPS_ACCESS_ROLE }}
-          devops-account-id: ${{ env.DEVOPS_ACCOUNT_ID }}
-          devops-account-name: ${{ env.DEVOPS_ACCOUNT_NAME }}
+          update-operating-system: true
+          update-python-version: true
+          install-default-tools: true
+          install-custom-tools: 'netcat'
+          install-awscli-tool: true
+          install-terraform-cli: true
+        continue-on-error: false
+      - name: Check On Failures
+        if: steps.system-requirements.outputs.status == 'failure'
+        run: |
+          echo -e "Warning: System Requirements Failed [Status]: ${{ steps.system-requirements.outputs.status }}" ;
 ####----------------------------------------------------------------------------
+      ## Installed Packages
+      - name: Installed Packages
+        id: installed-packages
+        shell: bash
+        run: |
+          jq --version;
+          tree --version;
+          terraform --version;
 ```
 
-**<span style="color:red">4</span>** -) The output will be like this:
+**<span style="color:red">4</span>** -) The output will be like this: [Pipeline Execution](https://github.com/emvaldes/operations-toolset/actions?query=workflow%3A%22GitHub+Actions+-+System+Requirements%22)
 
 ```console
-Injecting Default User-Credentials into AWS-Credentials file: /home/runner/work/raas/raas/.aws/credentials
+Updating/Upgrading Operating System ...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+lsb-release is already the newest version (9.20170808ubuntu1).
+0 upgraded, 0 newly installed, 0 to remove and 67 not upgraded.
 
-Initiating STS Assume Role request ...
-Fetched STS Assumed Role Values:
+No LSB modules are available.
+Distributor ID:	Ubuntu
+Description:	Ubuntu 18.04.5 LTS
+Release:	18.04
+Codename:	bionic
 
-Constructed Session Items [array]:
-AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_TOKEN_EXPIRES
+Re-Linking Python (latest: 3.6) ...
 
-Obtaining Caller Identity (Default-Role):
-{
-    "UserId": "***",
-    "Account": "***",
-    "Arn": "arn:aws:iam::***:user/***"
-}
+Python 3.6.9
 
-Injecting Credential: -> aws_access_key_id = ASIAS...C727X
-Injecting Credential: -> aws_secret_access_key = jzpfr...mz0qC
-Injecting Credential: -> aws_session_token = IQoJb3JpZ2...LzUd1QbDo=
-Injecting Credential: -> x_principal_arn = arn:aws:iam::***:user/***
-Injecting Credential: -> x_security_token_expires = 2020-08-28T18:27:33+00:00
+Installing Default Tools ...
+Package: jq ...
+Package: tree ...
 
-Obtaining Caller Identity (Assumed-Role):
-{
-    "UserId": "***:DevOpsPipeline--20200827193000",
-    "Account": "***",
-    "Arn": "arn:aws:sts::***:assumed-role/***/DevOpsPipeline--20200827193000"
-}
-[
-    {
-        "Path": "/",
-        "UserName": "***",
-        "UserId": "***",
-        "Arn": "arn:aws:iam::***:user/***",
-        "CreateDate": "2020-08-23T05:03:10+00:00"
-    }
-]
+Installing Custom Tools ...
+Package: netcat ...
+
+AWS CLI is Installed ... Ok!
+/usr/local/bin/aws
+aws-cli/1.18.120 Python/2.7.17 Linux/5.3.0-1034-azure botocore/1.17.43
+
+Upgrading AWS-CLI to version 2.0.40
+lrwxrwxrwx 1 root root 22 Aug 17 06:21 /usr/local/bin/aws -> /usr/local/aws/bin/aws
+You can now run: /usr/local/bin/aws --version
+aws-cli/2.0.44 Python/3.7.3 Linux/5.3.0-1034-azure exe/x86_64.ubuntu.18
+
+HashiCorp Terraform is Installed ... Ok!
+/usr/local/bin/terraform
+
+Your version of Terraform is out of date! The latest version
+is 0.13.1. You can update by downloading from https://www.terraform.io/downloads.html
+Terraform v0.13.0
+
+Terraform Source: releases.hashicorp.com/terraform/0.13.1/terraform_0.13.1_linux_amd64.zip
+-rw-r--r-- 1 runner docker 34860186 Aug 26 18:16 /tmp/terraform_0.13.1_linux_amd64.zip
+Archive:  /tmp/terraform_0.13.1_linux_amd64.zip
+  inflating: terraform
+Terraform v0.13.1
+
+Completed!
+
+jq-1.5-1-a5b5cbe
+tree v1.7.0 (c) 1996 - 2014 by Steve Baker, Thomas Moore, Francesc Rocher, Florian Sesser, Kyosuke Tokoro
+Terraform v0.13.1
 ```
 
 Happy Coding & Share your work!
