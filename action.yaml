@@ -117,11 +117,12 @@ runs:
             terraform --version ;
           }
         ## Installing HashiCorp Terraform (latest):
-        if [[ ${{ inputs.install-terraform-cli }} == true ]]; then
+        terraform_version="${{ inputs.install-terraform-cli }}";
+        if [[ ${terraform_version} != false ]]; then
+          [[ ${terraform_version} == latest ]] && terraform_version='0.13.1';
           ## Terraform Package details:
           terraform_download='releases.hashicorp.com/terraform';
           terraform_platform='linux_amd64';
-          terraform_version='0.12.29';  ## Latest: 0.13.1
           terraform_package="terraform_${terraform_version}_${terraform_platform}.zip";
           terraform_source="${terraform_download}/${terraform_version}/${terraform_package}";
           echo -e "\nTerraform Source: ${terraform_source}";
