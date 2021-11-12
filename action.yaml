@@ -24,9 +24,13 @@ inputs:
     required: false
     default: false
   install-terraform-cli:
-    description: 'Installing HashiCorp Terraform (latest)'
+    description: 'Installing HashiCorp Terraform CLI'
     required: false
     default: false
+  target-terraform-version:
+    description: 'Terraform CLI Version (latest)'
+    required: false
+    default: '1.0.11'
 ####----------------------------------------------------------------------------
 ## outputs:
 ####----------------------------------------------------------------------------
@@ -52,11 +56,10 @@ runs:
         ####----------------------------------------------------------------------------
         ## Update|Upgrade Python (latest):
         if [[ "${{ inputs.update-python-version }}" == true ]]; then
-          echo -en "\nRe-Linking Python (latest: 3.6) ..." ;
-          ## python --version ; ## Python 2.7
-          cd /usr/bin ;
-          sudo ln -fs python3.6 python ; echo -e ;
-          python --version ;
+          echo -en "\nLinking Python (latest: 3.x) ... -> " ;
+          ## cd /usr/bin ;
+          ## sudo ln -fs python3.? python ; echo -e ;
+          python --version 2>/dev/null ;
           ## else  echo -e "Skip: Upgrading Python (latest)! " ;
         fi ;
         ####----------------------------------------------------------------------------
@@ -110,17 +113,17 @@ runs:
           ## else  echo -e "Skip: Installing AWS CLI (latest)! " ;
         fi ;
         ####----------------------------------------------------------------------------
-        ## Upgrading: https://www.terraform.io/upgrade-guides/0-13.html
-        ## Installing Terraform CLI (latest):
-        terraform --version >/dev/null 2>&1 && {
-            echo -e >&2 "\nHashiCorp Terraform is Installed ... Ok! " ;
-            which terraform ;
-            terraform --version ;
-          }
-        ## Installing HashiCorp Terraform (latest):
-        terraform_version="${{ inputs.install-terraform-cli }}" ;
-        if [[ "${terraform_version}" != false ]]; then
-          [[ "${terraform_version}" == latest ]] && terraform_version='0.13.1' ;
+        if [[ "${{ inputs.install-terraform-cli }}" != false ]]; then
+          terraform --version >/dev/null 2>&1 && {
+              echo -e >&2 "\nHashiCorp Terraform is Installed ... Ok! \n" ;
+              whereis_terraform="$( which terraform )" ;
+              ## terraform_version="$( terraform --version | head -n1 | cut -d' ' -f2 )" ;
+              terraform_version="$( terraform --version -json | jq '.terraform_version' --raw-output ; )" ;
+              echo -e "Isolating exiting Terraform ${terraform_version} binary [${whereis_terraform}] ..." ;
+              mv -v "${whereis_terraform}" "${whereis_terraform}-${terraform_version}" ;
+            } ; ## || { echo -e "Installing HashiCorp Terraform CLI (latest/custom version)" ; } ;
+          ## Upgrading: https://www.terraform.io/upgrade-guides/1-0.html
+          terraform_version=${{ inputs.target-terraform-version }} ;
           ## Terraform Package details:
           terraform_download='releases.hashicorp.com/terraform' ;
           terraform_platform='linux_amd64' ;
@@ -132,6 +135,7 @@ runs:
           unzip /tmp/${terraform_package} ;
           chmod 0754 ./terraform ;
           sudo mv ./terraform /usr/local/bin/ ;
+          echo -e "\nListing current Terraform version:" ;
           ## TF_LOG=${terraform_loglevel} \
           terraform --version ;
           ## else  echo -e "Skip: Upgrading Operating System! " ;

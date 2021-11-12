@@ -6,6 +6,10 @@ on:
     name: Manual Deployment
     description: 'Triggering Manual Deployment'
     inputs:
+      target-terraform-version:
+        description: 'Terraform CLI Version (latest)'
+        required: false
+        default: '1.0.11'
       logLevel:
         description: 'Log level'
         required: true
@@ -18,7 +22,7 @@ on:
     paths:
       - action.yaml
 ####----------------------------------------------------------------------------
-## env:
+# env:
   ## AWS_ACCESS_KEY_ID
   ## AWS_DEFAULT_ACCOUNT
   ## AWS_DEFAULT_PROFILE
@@ -66,6 +70,8 @@ jobs:
         shell: bash
         run: |
           jq --version 2>/dev/null ;
-          aws --version ;
+          tree --version 2>/dev/null;
+          python --version 2>/dev/null ;
+          aws --version 2>/dev/null ;
           terraform --version 2>/dev/null ;
 ####----------------------------------------------------------------------------
