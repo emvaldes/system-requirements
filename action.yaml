@@ -2,143 +2,405 @@ name: System Requirements
 description: 'System Requirements (DevOps)'
 
 ####----------------------------------------------------------------------------
+
 inputs:
-  update-operating-system:
+
+  update-system:
     description: 'Updating the Operating System State'
     required: false
+    default: true
+
+  upgrade-system:
+    description: 'Upgrading the Operating System State'
+    required: false
     default: false
+
   update-python-version:
     description: 'Updating the current Python Version'
     required: false
-    default: false
+    default: true
+
+  update-pip-version:
+    description: 'Updating the current PIP Version'
+    required: false
+    default: true
+
   install-default-tools:
     description: 'Installing Default Toolset (DevOps)'
     required: false
     default: false
+
   install-custom-tools:
     description: 'Installing Custom Toolset (DevOps)'
     required: false
-    default: ''
-  install-awscli-tool:
+    default: false
+
+  install-requirements:
+    description: 'Installing Python Requirements'
+    required: false
+    default: false
+
+  install-awscli-cli:
     description: 'Installing AWS CLI Tool (latest)'
     required: false
     default: false
+
   install-terraform-cli:
     description: 'Installing HashiCorp Terraform CLI'
     required: false
     default: false
+
   target-terraform-version:
     description: 'Terraform CLI Version (latest)'
     required: false
-    default: '1.0.11'
+    default: latest
+
+  verbose-mode:
+    description: 'Enabling Verbosity'
+    required: false
+    default: false
+
 ####----------------------------------------------------------------------------
 ## outputs:
 ####----------------------------------------------------------------------------
+
 runs:
+
   using: "composite"
   steps:
-    ####----------------------------------------------------------------------------
-    ## System Requirements
-    - name: System Requirements
-      id: system-requirements
+
+    - name: System Release
+      id: system-release
       shell: bash
       run: |
-        ####----------------------------------------------------------------------------
-        ## Update|Upgrade Operating System (latest):
-        if [[ "${{ inputs.update-operating-system }}" == true ]]; then
-          echo -e "\nUpdating/Upgrading Operating System ..." ;
-          sudo apt-get update -y 2>&1>/dev/null ;
-          sudo apt-get install -y lsb-release ;
-          echo -e ;
-          lsb_release -a ;
-          ## else  echo -e "Skip: Updating Operating System (latest)! " ;
-        fi ;
-        ####----------------------------------------------------------------------------
-        ## Update|Upgrade Python (latest):
-        if [[ "${{ inputs.update-python-version }}" == true ]]; then
-          echo -en "\nLinking Python (latest: 3.x) ... -> " ;
-          ## cd /usr/bin ;
-          ## sudo ln -fs python3.? python ; echo -e ;
-          python --version 2>/dev/null ;
-          ## else  echo -e "Skip: Upgrading Python (latest)! " ;
-        fi ;
-        ####----------------------------------------------------------------------------
-        ## Installing Default Toolset:
-        if [[ "${{ inputs.install-default-tools }}" == true ]]; then
-          declare -a default_toolset=(
-              jq tree
-            ) ;
-          echo -e "\nInstalling Default Tools ..." ;
-          for xtool in ${default_toolset[@]}; do echo -e "Package: ${xtool} ..." ; done ;
-          ## else  echo -e "Skip: Installing Default Toolset! " ;
-        fi ;
-        ####----------------------------------------------------------------------------
-        ## Installing Custom Toolset:
-        evaluate="${{ inputs.install-custom-tools }}" ;
-        if [[ "${#evaluate}" -gt 0 ]]; then
-          echo -e "\nInstalling Custom Tools ..." ;
-          for xtool in ${{ inputs.install-custom-tools }}; do
-            echo -e "Package: ${xtool} ..." ;
-          done ;
-          default_toolset+=(${{ inputs.install-custom-tools }}) ;
-          ## else  echo -e "Skip: Intalling Custom Toolset! " ;
-        fi ;
-        ####----------------------------------------------------------------------------
-        ## Combining Toolsets:
-        if [[ "${#default_toolset}" -gt 0 ]]; then
-          sudo apt-get install -y ${default_toolset[*]} 2>&1>/dev/null ;
-        fi ;
-        ####----------------------------------------------------------------------------
-        ## Installing AWS CLI (latest):
-        aws --version >/dev/null 2>&1 && {
-            echo -e >&2 "\nAWS CLI is Installed ... Ok! " ;
-            which aws ;
-            aws --version ;
-          } ;
-        if [[ "${{ inputs.install-awscli-tool }}" == true ]]; then
-          ## Installing AWS CLI (latest):
-          if [[ "${{ inputs.install-awscli-tool }}" == true ]]; then
-            awscli_download='awscli.amazonaws.com' ;
-            awscli_package='awscli-exe-linux-x86_64.zip' ;
-            echo -e "\nUpgrading AWS-CLI to version 2.0.40" ;
-            ## https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
-            cd /tmp ;
-            wget --quiet "https://${awscli_download}/${awscli_package}" \
-                 --directory-prefix=/tmp/ --output-document=awscliv2.zip ;
-            unzip awscliv2.zip 1>/dev/null ;
-            ls -l /usr/local/bin/aws ;
-            sudo ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update ;
-            aws --version ;
-          fi;
-          ## else  echo -e "Skip: Installing AWS CLI (latest)! " ;
-        fi ;
-        ####----------------------------------------------------------------------------
-        if [[ "${{ inputs.install-terraform-cli }}" != false ]]; then
-          terraform --version >/dev/null 2>&1 && {
-              echo -e >&2 "\nHashiCorp Terraform is Installed ... Ok! \n" ;
-              whereis_terraform="$( which terraform )" ;
-              ## terraform_version="$( terraform --version | head -n1 | cut -d' ' -f2 )" ;
-              terraform_version="$( terraform --version -json | jq '.terraform_version' --raw-output ; )" ;
-              echo -e "Isolating exiting Terraform ${terraform_version} binary [${whereis_terraform}] ..." ;
-              mv -v "${whereis_terraform}" "${whereis_terraform}-${terraform_version}" ;
-            } ; ## || { echo -e "Installing HashiCorp Terraform CLI (latest/custom version)" ; } ;
-          ## Upgrading: https://www.terraform.io/upgrade-guides/1-0.html
-          terraform_version=${{ inputs.target-terraform-version }} ;
-          ## Terraform Package details:
-          terraform_download='releases.hashicorp.com/terraform' ;
-          terraform_platform='linux_amd64' ;
-          terraform_package="terraform_${terraform_version}_${terraform_platform}.zip" ;
-          terraform_source="${terraform_download}/${terraform_version}/${terraform_package}" ;
-          echo -e "\nTerraform Source: ${terraform_source}" ;
-          wget --quiet https://${terraform_source} -P /tmp/ ;
-          ls -al /tmp/${terraform_package} ;
-          unzip /tmp/${terraform_package} ;
-          chmod 0754 ./terraform ;
-          sudo mv ./terraform /usr/local/bin/ ;
-          echo -e "\nListing current Terraform version:" ;
-          ## TF_LOG=${terraform_loglevel} \
-          terraform --version ;
-          ## else  echo -e "Skip: Upgrading Operating System! " ;
-        fi ;
-        ####----------------------------------------------------------------------------
-        echo -e "\nCompleted! ";
+
+        ####--------------------------------------------------------------------
+        echo -e ;
+        cat /etc/os-release ;
+        export system_platform="$(
+            cat /etc/os-release \
+              | egrep '^NAME=".*$' \
+              | sed -e 's|"||g' -e 's|^NAME=||' \
+              | tr '[[:upper:]]' '[[:lower:]]'
+          )" ;
+        echo "SYSTEM_PLATFORM=${system_platform}" >> ${GITHUB_ENV} ;
+        echo -e ;
+        if [[ ${system_platform} == 'ubuntu' ]]; then
+            echo -en "Installing LSB Release ... " ;
+            sudo apt-get install --yes lsb-release 1>/dev/null ;
+            echo -e "done." ;
+            echo -en "Installing Dos2Unix ... " ;
+            sudo apt-get install --yes dos2unix 1>/dev/null ;
+            echo -e "done." ;
+        fi;
+        echo -e ;
+        ####--------------------------------------------------------------------
+
+    - name: Updating Operating System
+      id: updating-operating-system
+      shell: bash
+      run: |
+
+        ####--------------------------------------------------------------------
+        function update_system () {
+            local message="Updating Operating System (latest)" ;
+            if [[ "${{ inputs.update-system }}" == true ]]; then
+                    echo -en "\n${message} ..." ;
+                    if [[ ${{ env.SYSTEM_PLATFORM }} == 'ubuntu' ]]; then
+                        sudo apt-get update --yes 2>&1>/dev/null ;
+                    fi;
+                    echo -e " done." ;
+              else  echo -e "\nSkip: ${message}! " ;
+            fi ;
+            return 0;
+          }; ## alias update-system='update_system' ;
+        update_system ;
+        ####--------------------------------------------------------------------
+
+    - name: Upgrading Operating System
+      id: upgrading-operating-system
+      shell: bash
+      run: |
+
+        ####--------------------------------------------------------------------
+        function upgrade_system () {
+            local message="Upgrading Operating System (latest)" ;
+            if [[ "${{ inputs.upgrade-system }}" == true ]]; then
+                    echo -en "\n${message} ..." ;
+                    if [[ ${{ env.SYSTEM_PLATFORM }} == 'ubuntu' ]]; then
+                      sudo apt-get upgrade --yes 2>&1>/dev/null ;
+                    fi;
+                    echo -e " done." ;
+              else  echo -e "\nSkip: ${message}! " ;
+            fi ;
+            return 0;
+          }; ## alias upgrade-system='upgrade_system' ;
+        upgrade_system ;
+        ####--------------------------------------------------------------------
+
+    - name: Linking Python (Latest)
+      id: linking-python3
+      shell: bash
+      run: |
+
+        ####--------------------------------------------------------------------
+        function linking_python3 () {
+            local message="Linking Python (latest: 3.x)" ;
+            if [[ "${{ inputs.update-python-version }}" == true ]]; then
+                    echo -en "\n${message} ... " ;
+                    cd /usr/bin ;
+                    sudo ln -fs python3 python ;
+                    python --version ;
+              else  echo -e "\nSkip: ${message}! " ;
+            fi ;
+            return 0;
+          }; ## alias linking-python3='linking_python3' ;
+        linking_python3 ;
+        echo -e ;
+        ####--------------------------------------------------------------------
+
+    - name: Python PIP3 (Latest)
+      id: python-pip3
+      shell: bash
+      run: |
+
+        ####--------------------------------------------------------------------
+        function python_pip3 () {
+            local message="Install/Upgrade python3-pip" ;
+            if [[ "${{ inputs.update-pip-version }}" == true ]]; then
+                    echo -en "\n${message} ... " ;
+                    if [[ ${{ env.SYSTEM_PLATFORM }} == 'ubuntu' ]]; then
+                        sudo apt install python3-pip --yes ;
+                    fi;
+                    python -m pip install --upgrade pip ;
+                    pip --version ;
+              else  echo -e "\nSkip: ${message}! " ;
+            fi ;
+            return 0;
+          }; ## alias python-pip3='python_pip3' ;
+        python_pip3 ;
+        echo -e ;
+        ####--------------------------------------------------------------------
+
+    - name: Python Requirements
+      id: python-requirements
+      shell: bash
+      run: |
+
+        ####--------------------------------------------------------------------
+        function python_requirements () {
+            local message="Installing Python Requirements" ;
+            local requirements_listing="/tmp/requirements.list" ;
+            local requirements="${{ inputs.install-requirements }}" ;
+            if [[ ( "${#requirements}" -gt 0 ) && ( "${requirements}" != false ) ]]; then
+                    declare -a requirements=(
+                        ${{ inputs.install-requirements }}
+                      ) ;
+                    if [[ "${#requirements[@]}" -gt 0 ]]; then
+                      echo -e ${requirements[@]} \
+                         | tr '[[:blank:]]' '\n' \
+                         | sed '/^$/d' \
+                         | sort -n | uniq - \
+                         | dos2unix \
+                      > "${requirements_listing}" ;
+                      if [ -f "${requirements_listing}" ]; then
+                              echo -e "\nRequirements:\n\n$( cat "${requirements_listing}" )" ;
+                              if [[ $( wc -w "${requirements_listing}" | awk '{print $1}' ) -gt 0 ]]; then
+                                      echo -e "\n${message} ..." ;
+                                      pip install -r "${requirements_listing}" ;
+                                else  echo -e "Warning: "${requirements_listing}" is empty! " ;
+                              fi;
+                        else  echo -e "Warning: "${requirements_listing}" was not found";
+                      fi;
+                    fi ;
+              else  echo -e "\nSkip: ${message}! " ;
+            fi;
+            return 0;
+          }; ## alias python-requirements='python_requirements' ;
+        python_requirements ;
+        echo -e ;
+        ####--------------------------------------------------------------------
+
+    - name: Installing Toolset
+      id: installing-toolset
+      shell: bash
+      run: |
+
+        ####--------------------------------------------------------------------
+        function install_toolset () {
+            local message="Install Toolset" ;
+            local default="${{ inputs.install-default-tools }}" ;
+            [[ ${default} == false ]] && default='' ;
+            local custom="${{ inputs.install-custom-tools }}" ;
+            [[ ${custom} == false ]] && custom='' ;
+            local packages_listing="/tmp/packages.list" ;
+            declare -a packages=( "${default}\n${custom}" ) ;
+            if [[ ( "${#packages}" -gt 0 ) && ( "${packages}" != false ) ]]; then
+                    echo -e ${packages[@]} \
+                       | tr '[[:blank:]]\,\;' '\n' \
+                       | sed '/^$/d' \
+                       | sort -n | uniq - \
+                       | dos2unix \
+                    > "${packages_listing}" ;
+                    if [ -f "${packages_listing}" ]; then
+                            echo -e "\nPackages:\n\n$( cat "${packages_listing}" | sed '/^$/d' )" ;
+                            if [[ $( wc -w "${packages_listing}" | awk '{print $1}' ) -gt 0 ]]; then
+                                    declare -a packages=($( cat "${packages_listing}" )) ;
+                                    if [[ ${{ env.SYSTEM_PLATFORM }} == 'ubuntu' ]]; then
+                                      for package in ${packages[@]}; do
+                                        sudo apt-get install --yes ${package} 1>/dev/null;
+                                        apt info ${package} ;
+                                      done ;
+                                    fi ;
+                              else  echo -e "Warning: "${packages_listing}" is empty! " ;
+                            fi ;
+                      else  echo -e "Warning: "${packages_listing}" was not found! " ;
+                    fi ;
+              else  echo -e "\nSkip: ${message}! " ;
+            fi ;
+            return 0;
+          }; ## alias install-toolset='install_toolset' ;
+        install_toolset ;
+        ####--------------------------------------------------------------------
+
+    - name: Installing AWS CLI
+      id: installing-aws-cli
+      shell: bash
+      run: |
+
+        ####--------------------------------------------------------------------
+        function install_awscli () {
+            aws --version >/dev/null 2>&1 && {
+                echo -e >&2 "\nAWS CLI is Installed ... Ok! " ;
+                which aws ;
+                aws --version ;
+              } ;
+            if [[ "${{ inputs.install-awscli-cli }}" == true ]]; then
+                    ## Installing AWS CLI (latest):
+                    if [[ "${{ inputs.install-awscli-cli }}" == true ]]; then
+                      awscli_download='awscli.amazonaws.com' ;
+                      awscli_package='awscli-exe-linux-x86_64.zip' ;
+                      echo -e "\nUpgrading AWS-CLI to version 2.0.40" ;
+                      ## https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
+                      cd /tmp ;
+                      wget --quiet "https://${awscli_download}/${awscli_package}" \
+                           --directory-prefix=/tmp/ --output-document=awscliv2.zip ;
+                      unzip awscliv2.zip 1>/dev/null ;
+                      ls -l /usr/local/bin/aws ;
+                      sudo ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update ;
+                      # aws --version ;
+                    fi;
+              else  echo -e "\nSkip: Installing AWS CLI (latest)! " ;
+            fi ;
+            return 0;
+          }; ## alias install-awscli='install_awscli' ;
+        install_awscli ;
+        echo -e ;
+        ####--------------------------------------------------------------------
+
+    - name: Installing Terraform CLI
+      id: installing-terraform-cli
+      shell: bash
+      run: |
+
+        ####--------------------------------------------------------------------
+        function install_terraform_cli () {
+            ## Reference -> https://developer.hashicorp.com/terraform/downloads
+            local target_terraform_version=${{ inputs.target-terraform-version }} ;
+            local message="Installing HashiCorp Terraform CLI (${target_terraform_version})" ;
+            ## Evaluating if Terraform is installed:
+            terraform --version >/dev/null 2>&1 && {
+                current_terraform_version="$(
+                    terraform --version -json | jq '.terraform_version' --raw-output
+                  )" ;
+                whereis_terraform="$( which terraform )" ;
+                if [[ "${current_terraform_version}" != "${{ inputs.target-terraform-version }}" ]]; then
+                        echo -e "Isolating exiting Terraform ${current_terraform_version} binary [ ${whereis_terraform} ] ..." ;
+                        terraform_backup="${whereis_terraform}-v${current_terraform_version}" ;
+                        if [[ ! -f "${terraform_backup}" ]]; then
+                          mv -v "${whereis_terraform}" "${terraform_backup}" ;
+                        fi ;
+                  else  echo -e "Warning: Terraform ${{ inputs.target-terraform-version }} is already installed! " ;
+                        echo -e "\nSkip: ${message}! " ;
+                        return 0 ;
+                fi ;
+              } ;
+              ## Processing installation
+              echo -e "${message}" ;
+              export USR_LOCAL_BIN="/usr/local/bin" ;
+              mkdir -p ${USR_LOCAL_BIN} ;
+              local domain_name="hashicorp.com" ;
+              local releases="releases.${domain_name}" ;
+              if [[ "${{ inputs.install-terraform-cli }}" != false ]]; then
+                      if [[ "${{ inputs.target-terraform-version }}" == 'latest' ]]; then
+                              case ${{ env.SYSTEM_PLATFORM }} in
+                                'ubuntu' ) echo -e "Platform: ${{ env.SYSTEM_PLATFORM }}" ;
+                                           local hashicorp_keyring="/usr/share/keyrings/hashicorp-archive-keyring.gpg" ;
+                                           repository="https://apt.${releases}" ;
+                                           wget --quiet -O- ${repository}/gpg | sudo gpg --dearmor -o ${hashicorp_keyring} ;
+                                           echo "deb [signed-by=${hashicorp_keyring}] ${repository} $(lsb_release -cs) main" \
+                                              | sudo tee /etc/apt/sources.list.d/hashicorp.list ;
+                                           sudo apt update --yes 1>/dev/null ;
+                                           ## sudo apt upgrade --yes 1>/dev/null ;
+                                           sudo apt install --yes terraform 1>/dev/null ;
+                                           cd ${USR_LOCAL_BIN}/ && ln -s $( which terraform ) . && cd - ;
+                                           ls -al ${USR_LOCAL_BIN}/terraform ;
+                                           ;;
+                                'centos/rhel' ) repository="https://rpm.${releases}/RHEL/hashicorp.repo" ;
+                                                sudo yum install --yes yum-utils ;
+                                                sudo yum-config-manager --add-repo ${repository} ;
+                                                sudo yum update --yes ;
+                                                ## sudo yum upgrade --yes ;
+                                                sudo yum --yes install terraform ;
+                                                ;;
+                                'fedora' ) repository="https://rpm.${releases}/fedora/hashicorp.repo" ;
+                                           sudo dnf install --yes dnf-plugins-core ;
+                                           sudo dnf config-manager --add-repo ${repository} ;
+                                           sudo dnf update --yes ;
+                                           ## sudo dnf upgrade --yes ;
+                                           sudo dnf --yes install terraform ;
+                                           ;;
+                                'amazon' ) repository="https://rpm.${releases}/AmazonLinux/hashicorp.repo" ;
+                                           sudo yum install --yes yum-utils shadow-utils ;
+                                           sudo yum-config-manager --add-repo ${repository} ;
+                                           sudo yum update --yes ;
+                                           ## sudo yum upgrade --yes ;
+                                           sudo yum --yes install terraform ;
+                                           ;;
+                              esac ;
+                        else  ## Terraform Package details:
+                              terraform_download="${releases}/terraform" ;
+                              terraform_platform='linux_amd64' ;
+                              terraform_package="terraform_${target_terraform_version}_${terraform_platform}.zip" ;
+                              terraform_source="${terraform_download}/${target_terraform_version}/${terraform_package}" ;
+                              echo -e "\nTerraform Source: ${terraform_source}" ;
+                              ## Fetching Terraform package:
+                              wget --quiet https://${terraform_source} -P /tmp/ ;
+                              ls -al /tmp/${terraform_package} ;
+                              unzip /tmp/${terraform_package} ;
+                              chmod 0754 ./terraform ;
+                              sudo mv ./terraform ${USR_LOCAL_BIN}/ ;
+                      fi ;
+                else  echo -e "\nSkip: ${message}! " ;
+              fi ;
+            return 0;
+          }; ## alias install-terraform-cli='install_terraform_cli' ;
+        install_terraform_cli ;
+        ####--------------------------------------------------------------------
+
+    - name: Display System Environment
+      id: system-environment
+      shell: bash
+      run: |
+
+        ####--------------------------------------------------------------------
+        function system_environment () {
+            if [[ "${{ inputs.verbose-mode }}" == true ]]; then
+              echo -e "System Path:" ;
+              echo $PATH | tr ':' '\n' ;
+              echo -e "\nEnvironment variables:" ;
+              env ;
+            fi ;
+            return 0;
+          }; alias system-environment='system_environment' ;
+        system_environment ;
