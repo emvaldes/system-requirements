@@ -45,6 +45,11 @@ inputs:
     required: false
     default: false
 
+  install-terraform-cli:
+    description: 'Installing HashiCorp Terraform CLI'
+    required: false
+    default: false
+
   awscli-download:
     description: 'AWS CLI Download Domain'
     required: false
@@ -54,11 +59,6 @@ inputs:
     description: 'AWS CLI Package (Linux)'
     required: false
     default: 'awscli-exe-linux-x86_64.zip'
-
-  install-terraform-cli:
-    description: 'Installing HashiCorp Terraform CLI'
-    required: false
-    default: false
 
   terraform-version:
     description: 'Terraform CLI Version (latest)'
