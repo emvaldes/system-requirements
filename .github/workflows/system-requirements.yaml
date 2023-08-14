@@ -58,7 +58,8 @@ env:
   UPDATE_SYSTEM:  ${{ vars.UPDATE_SYSTEM }}
   UPGRADE_SYSTEM: ${{ vars.UPGRADE_SYSTEM }}
 
-  ## Verbosity Mode
+  ## Debugger & Verbosity Mode
+  DEBUGER_MODE: ${{ vars.DEBUGGER_MODE }}
   VERBOSE_MODE: ${{ vars.VERBOSE_MODE }}
 
 ####----------------------------------------------------------------------------
@@ -94,6 +95,7 @@ jobs:
         id: system-requirements
         with:
 
+          debuger-mode: ${DEBUGGER_MODE}
           verbose-mode: ${VERBOSE_MODE}
 
           update-system:  ${UPDATE_SYSTEM}
