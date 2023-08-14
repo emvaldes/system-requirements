@@ -30,6 +30,8 @@ on:
 
 env:
 
+  ## Variables: ----------------------------------------------------------------
+
   ## AWS + Terraform CLI components
   AWSCLI_CLI:    ${{ vars.AWSCLI_CLI }}
 
@@ -41,7 +43,7 @@ env:
   CUSTOM_TOOLS:  ${{ vars.CUSTOM_TOOLS }}
   DEFAULT_TOOLS: ${{ vars.DEFAULT_TOOLS }}
 
-  ## Python Requirements
+  ## Python (Packages) Requirements
   PYTHON_REQUIREMENTS:  ${{ vars.PYTHON_REQUIREMENTS }}
 
   ## Terraform Application
@@ -105,8 +107,8 @@ jobs:
 
           install-python-requirements: ${PYTHON_REQUIREMENTS}
 
-          install-awscli-cli: ${AWSCLI_CLI}
-          install-terraform-cli:    ${TERRAFORM_CLI}
+          install-awscli-cli:    ${AWSCLI_CLI}
+          install-terraform-cli: ${TERRAFORM_CLI}
 
           terraform-version: ${TERRAFORM_VERSION}
 
