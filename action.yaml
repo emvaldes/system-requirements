@@ -89,10 +89,8 @@ runs:
       shell: bash
       run: |
 
-        ####--------------------------------------------------------------------
         ## Enabling Debuger-mode:
         [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
-        ####--------------------------------------------------------------------
 
         ####--------------------------------------------------------------------
         completion="Skipping ...! " ;
@@ -126,6 +124,9 @@ runs:
       shell: bash
       run: |
 
+        ## Enabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
+
         ####--------------------------------------------------------------------
         function update_system () {
             local message="Updating Operating System (latest)" ;
@@ -146,6 +147,9 @@ runs:
       id: upgrading-operating-system
       shell: bash
       run: |
+
+        ## Enabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
 
         ####--------------------------------------------------------------------
         function upgrade_system () {
@@ -168,6 +172,9 @@ runs:
       shell: bash
       run: |
 
+        ## Enabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
+
         ####--------------------------------------------------------------------
         function linking_python3 () {
             local message="Linking Python (latest: 3.x)" ;
@@ -188,6 +195,9 @@ runs:
       id: python-pip3
       shell: bash
       run: |
+
+        ## Enabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
 
         ####--------------------------------------------------------------------
         function python_pip3 () {
@@ -211,6 +221,9 @@ runs:
       id: python-requirements
       shell: bash
       run: |
+
+        ## Enabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
 
         ####--------------------------------------------------------------------
         function python_requirements () {
@@ -250,6 +263,9 @@ runs:
       id: installing-toolset
       shell: bash
       run: |
+
+        ## Enabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
 
         ####--------------------------------------------------------------------
         function install_toolset () {
@@ -293,6 +309,9 @@ runs:
       shell: bash
       run: |
 
+        ## Enabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
+
         ####--------------------------------------------------------------------
         function install_awscli () {
             aws --version >/dev/null 2>&1 && {
@@ -327,6 +346,9 @@ runs:
       id: installing-terraform-cli
       shell: bash
       run: |
+
+        ## Enabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
 
         ####--------------------------------------------------------------------
         function install_terraform_cli () {
@@ -418,6 +440,9 @@ runs:
       shell: bash
       run: |
 
+        ## Enabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
+
         ####--------------------------------------------------------------------
         function system_environment () {
             if [[ "${{ inputs.verbose-mode }}" == true ]]; then
@@ -432,9 +457,4 @@ runs:
 
         ####--------------------------------------------------------------------
         echo -e "\n${completion}\n" ;
-        ####--------------------------------------------------------------------
-
-        ####--------------------------------------------------------------------
-        ## Disabling Debuger-mode:
-        [[ ${{ inputs.debuger-mode }} == true ]] && set +x ;
         ####--------------------------------------------------------------------
