@@ -8,6 +8,8 @@ GitHub Actions : DevOps As A Service (DaaS) - System Requirements
 
 ```console
 AWSCLI_CLI              Install Amazon WebServices CLI (false)
+```
+```console
 AWSCLI_DOWNLOAD         AWS CLI Download (awscli.amazonaws.com)
 AWSCLI_PACKAGE          AWS CLI Package (e.g.: awscli-exe-linux-x86_64.zip)
 ```
