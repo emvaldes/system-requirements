@@ -30,28 +30,34 @@ on:
 
 env:
 
-  VERBOSE_MODE: ${{ vars.VERBOSE_MODE }}
+  ## AWS + Terraform CLI components
+  AWSCLI_CLI:    ${{ vars.AWSCLI_CLI }}
+
+  ## AWS CLI package attributes
+  AWSCLI_DOWNLOAD: ${{ vars.AWSCLI_DOWNLOAD }}
+  AWSCLI_PACKAGE:  ${{ vars.AWSCLI_PACKAGE }}
+
+  ## Default/Custom toolset + Requirements
+  CUSTOM_TOOLS:  ${{ vars.CUSTOM_TOOLS }}
+  DEFAULT_TOOLS: ${{ vars.DEFAULT_TOOLS }}
+
+  ## Python Requirements
+  PYTHON_REQUIREMENTS:  ${{ vars.PYTHON_REQUIREMENTS }}
+
+  ## Terraform Application
+  TERRAFORM_CLI:     ${{ vars.TERRAFORM_CLI }}
+  TERRAFORM_VERSION: ${{ vars.TERRAFORM_VERSION }}
+
+  ## Update/Upgrade -> Python + PIP
+  UPDATE_PIP:    ${{ vars.UPDATE_PIP }}
+  UPDATE_PYTHON: ${{ vars.UPDATE_PYTHON }}
 
   ## Update/Upgrade -> System Components
   UPDATE_SYSTEM:  ${{ vars.UPDATE_SYSTEM }}
   UPGRADE_SYSTEM: ${{ vars.UPGRADE_SYSTEM }}
 
-  ## Default/Custom toolset + Requirements
-  DEFAULT_TOOLS: ${{ vars.DEFAULT_TOOLS }}
-  CUSTOM_TOOLS:  ${{ vars.CUSTOM_TOOLS }}
-
-  ## Python Requirements
-  PYTHON_REQUIREMENTS:  ${{ vars.PYTHON_REQUIREMENTS }}
-
-  ## AWS + Terraform CLI components
-  AWSCLI_CLI:    ${{ vars.AWSCLI_CLI }}
-
-  TERRAFORM_CLI:     ${{ vars.TERRAFORM_CLI }}
-  TERRAFORM_VERSION: ${{ vars.TERRAFORM_VERSION }}
-
-  ## Update/Upgrade -> Python + PIP
-  UPDATE_PYTHON: ${{ vars.UPDATE_PYTHON }}
-  UPDATE_PIP:    ${{ vars.UPDATE_PIP }}
+  ## Verbosity Mode
+  VERBOSE_MODE: ${{ vars.VERBOSE_MODE }}
 
 ####----------------------------------------------------------------------------
 
