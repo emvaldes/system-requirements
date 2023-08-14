@@ -31,5 +31,6 @@ UPDATE_SYSTEM           Updating Operating System (false)
 UPGRADE_SYSTEM          Upgrading Operating System (false)
 ```
 ```console
+DEBUGER_MODE            Enable/Disable Shell Debugger
 VERBOSE_MODE            Identify verbosity level (false)
 ```
