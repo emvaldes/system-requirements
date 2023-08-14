@@ -60,7 +60,7 @@ inputs:
     required: false
     default: false
 
-  target-terraform-version:
+  terraform-version:
     description: 'Terraform CLI Version (latest)'
     required: false
     default: latest
@@ -316,7 +316,7 @@ runs:
         ####--------------------------------------------------------------------
         function install_terraform_cli () {
             ## Reference -> https://developer.hashicorp.com/terraform/downloads
-            local target_terraform_version=${{ inputs.target-terraform-version }} ;
+            local target_terraform_version=${{ inputs.terraform-version }} ;
             local message="Installing HashiCorp Terraform CLI (${target_terraform_version})" ;
             ## Evaluating if Terraform is installed:
             terraform --version >/dev/null 2>&1 && {
@@ -324,13 +324,13 @@ runs:
                     terraform --version -json | jq '.terraform_version' --raw-output
                   )" ;
                 whereis_terraform="$( which terraform )" ;
-                if [[ "${current_terraform_version}" != "${{ inputs.target-terraform-version }}" ]]; then
+                if [[ "${current_terraform_version}" != "${{ inputs.terraform-version }}" ]]; then
                         echo -e "Isolating exiting Terraform ${current_terraform_version} binary [ ${whereis_terraform} ] ..." ;
                         terraform_backup="${whereis_terraform}-v${current_terraform_version}" ;
                         if [[ ! -f "${terraform_backup}" ]]; then
                           mv -v "${whereis_terraform}" "${terraform_backup}" ;
                         fi ;
-                  else  echo -e "Warning: Terraform ${{ inputs.target-terraform-version }} is already installed! " ;
+                  else  echo -e "Warning: Terraform ${{ inputs.terraform-version }} is already installed! " ;
                         echo -e "\nSkip: ${message}! " ;
                         return 0 ;
                 fi ;
@@ -342,7 +342,7 @@ runs:
               local domain_name="hashicorp.com" ;
               local releases="releases.${domain_name}" ;
               if [[ "${{ inputs.install-terraform-cli }}" != false ]]; then
-                      if [[ "${{ inputs.target-terraform-version }}" == 'latest' ]]; then
+                      if [[ "${{ inputs.terraform-version }}" == 'latest' ]]; then
                               case ${{ env.SYSTEM_PLATFORM }} in
                                 'ubuntu' ) echo -e "Platform: ${{ env.SYSTEM_PLATFORM }}" ;
                                            local hashicorp_keyring="/usr/share/keyrings/hashicorp-archive-keyring.gpg" ;
