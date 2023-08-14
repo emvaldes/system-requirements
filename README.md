@@ -9,6 +9,7 @@ GitHub Actions : DevOps As A Service (DaaS) - System Requirements
 ```console
 AWSCLI_CLI              Install Amazon WebServices CLI (false)
 AWSCLI_DOWNLOAD         AWS CLI Download (awscli.amazonaws.com)
+
 AWSCLI_PACKAGE          AWS CLI Package (e.g.: awscli-exe-linux-x86_64.zip)
 ```
 ```console
@@ -26,6 +27,7 @@ UPGRADE_SYSTEM          Upgrading Operating System (false)
 
 UPDATE_PYTHON           Update Python to the latest version (true)
 UPDATE_PIP              Update Python package management (true)
-
+```
+```console
 VERBOSE_MODE            Identify verbosity level (false)
 ```
