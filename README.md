@@ -22,11 +22,12 @@ TERRAFORM_CLI           Install Terraform CLI (false)
 TERRAFORM_VERSION       Terraform specific target version (1.5.4)
 ```
 ```console
-UPDATE_SYSTEM           Updating Operating System (false)
-UPGRADE_SYSTEM          Upgrading Operating System (false)
-
 UPDATE_PYTHON           Update Python to the latest version (true)
 UPDATE_PIP              Update Python package management (true)
+```
+```console
+UPDATE_SYSTEM           Updating Operating System (false)
+UPGRADE_SYSTEM          Upgrading Operating System (false)
 ```
 ```console
 VERBOSE_MODE            Identify verbosity level (false)
