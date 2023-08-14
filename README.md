@@ -34,3 +34,7 @@ UPGRADE_SYSTEM                Upgrading Operating System (false)
 DEBUGER_MODE                  Enable/Disable Shell Debugger
 VERBOSE_MODE                  Identify verbosity level (false)
 ```
+```console
+ACTIONS_RUNNER_DEBUG          Enable runner diagnostic logging
+ACTIONS_STEP_DEBUG            Enable step debug logging
+```
