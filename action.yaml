@@ -45,6 +45,16 @@ inputs:
     required: false
     default: false
 
+  awsclid-download:
+    description: 'AWS CLI Download Domain'
+    required: false
+    default: 'awscli.amazonaws.com'
+
+  awsclid-package:
+    description: 'AWS CLI Package (Linux)'
+    required: false
+    default: 'awscli-exe-linux-x86_64.zip'
+
   install-terraform-cli:
     description: 'Installing HashiCorp Terraform CLI'
     required: false
@@ -278,8 +288,8 @@ runs:
             if [[ "${{ inputs.install-awscli-cli }}" == true ]]; then
                     ## Installing AWS CLI (latest):
                     if [[ "${{ inputs.install-awscli-cli }}" == true ]]; then
-                      awscli_download='awscli.amazonaws.com' ;
-                      awscli_package='awscli-exe-linux-x86_64.zip' ;
+                      awscli_download=${{ inputs.AWSCLI_DOWNLOAD }} ;
+                      awscli_package=${{ inputs.AWSCLI_PACKAGE }} ;
                       echo -e "\nUpgrading AWS-CLI to version 2.0.40" ;
                       ## https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
                       cd /tmp ;
