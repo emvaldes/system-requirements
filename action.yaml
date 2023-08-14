@@ -45,12 +45,12 @@ inputs:
     required: false
     default: false
 
-  awsclid-download:
+  awscli-download:
     description: 'AWS CLI Download Domain'
     required: false
     default: 'awscli.amazonaws.com'
 
-  awsclid-package:
+  awscli-package:
     description: 'AWS CLI Package (Linux)'
     required: false
     default: 'awscli-exe-linux-x86_64.zip'
@@ -288,8 +288,8 @@ runs:
             if [[ "${{ inputs.install-awscli-cli }}" == true ]]; then
                     ## Installing AWS CLI (latest):
                     if [[ "${{ inputs.install-awscli-cli }}" == true ]]; then
-                      awscli_download=${{ inputs.AWSCLI_DOWNLOAD }} ;
-                      awscli_package=${{ inputs.AWSCLI_PACKAGE }} ;
+                      awscli_download=${{ inputs.awscli-download }} ;
+                      awscli_package=${{ inputs.awscli-package }} ;
                       echo -e "\nUpgrading AWS-CLI to version 2.0.40" ;
                       ## https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
                       cd /tmp ;
