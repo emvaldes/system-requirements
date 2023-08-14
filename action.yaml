@@ -35,7 +35,7 @@ inputs:
     required: false
     default: false
 
-  install-requirements:
+  install-python-requirements:
     description: 'Installing Python Requirements'
     required: false
     default: false
@@ -201,10 +201,10 @@ runs:
         function python_requirements () {
             local message="Installing Python Requirements" ;
             local requirements_listing="/tmp/requirements.list" ;
-            local requirements="${{ inputs.install-requirements }}" ;
+            local requirements="${{ inputs.install-python-requirements }}" ;
             if [[ ( "${#requirements}" -gt 0 ) && ( "${requirements}" != false ) ]]; then
                     declare -a requirements=(
-                        ${{ inputs.install-requirements }}
+                        ${{ inputs.install-python-requirements }}
                       ) ;
                     if [[ "${#requirements[@]}" -gt 0 ]]; then
                       echo -e ${requirements[@]} \
