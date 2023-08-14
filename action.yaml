@@ -65,7 +65,7 @@ inputs:
     required: false
     default: latest
 
-  debug-mode:
+  debuger-mode:
     description: 'Enabling Shell Debugger'
     required: false
     default: false
@@ -84,18 +84,13 @@ runs:
   using: "composite"
   steps:
 
-    - name: Enable Debug-mode
-      id: enabling-debugger
-      shell: bash
-      run: |
-
-        ## Enabling Debug-mode:
-        [[ ${{ inputs.debug-mode }} == true ]] && set -x ;
-
     - name: System Release
       id: system-release
       shell: bash
       run: |
+
+        ## Enabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set -x ;
 
         ####--------------------------------------------------------------------
         echo -e ;
@@ -428,10 +423,5 @@ runs:
           }; alias system-environment='system_environment' ;
         system_environment ;
 
-    - name: Disable Debug-mode
-      id: disabling-debugger
-      shell: bash
-      run: |
-
-        ## Disabling Debug-mode:
-        set -x ;
+        ## Disabling Debuger-mode:
+        [[ ${{ inputs.debuger-mode }} == true ]] && set +x ;
