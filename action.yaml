@@ -65,6 +65,11 @@ inputs:
     required: false
     default: latest
 
+  debug-mode:
+    description: 'Enabling Shell Debugger'
+    required: false
+    default: false
+
   verbose-mode:
     description: 'Enabling Verbosity'
     required: false
@@ -78,6 +83,14 @@ runs:
 
   using: "composite"
   steps:
+
+    - name: Enable Debug-mode
+      id: enabling-debugger
+      shell: bash
+      run: |
+
+        ## Enabling Debug-mode:
+        [[ ${{ inputs.debug-mode }} == true ]] && set -x ;
 
     - name: System Release
       id: system-release
@@ -414,3 +427,11 @@ runs:
             return 0;
           }; alias system-environment='system_environment' ;
         system_environment ;
+
+    - name: Disable Debug-mode
+      id: disabling-debugger
+      shell: bash
+      run: |
+
+        ## Disabling Debug-mode:
+        set -x ;
