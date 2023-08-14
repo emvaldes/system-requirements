@@ -95,7 +95,7 @@ jobs:
         id: system-requirements
         with:
 
-          debuger-mode: ${DEBUGGER_MODE}
+          debuger-mode: ${DEBUGER_MODE}
           verbose-mode: ${VERBOSE_MODE}
 
           update-system:  ${UPDATE_SYSTEM}
